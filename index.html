@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examen de Investigación Tecnológica</title>
+    <!-- Tailwind CSS para diseño responsivo y moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f8fafc;
+        }
+        .question-card {
+            transition: all 0.3s ease;
+        }
+        .option-label {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .option-label:hover {
+            background-color: #f1f5f9;
+        }
+        input[type="radio"] {
+            width: 1.2rem;
+            height: 1.2rem;
+            cursor: pointer;
+        }
+        #resultArea {
+            backdrop-filter: blur(8px);
+        }
+        .timer-sticky {
+            position: sticky;
+            top: 1rem;
+            z-index: 40;
+        }
+        /* Prevenir selección de texto para evitar copias rápidas durante el examen */
+        .no-select {
+            user-select: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen py-8 px-4 no-select">
+
+    <div class="max-w-4xl mx-auto">
+        <!-- Temporizador Sticky -->
+        <div class="timer-sticky mb-6">
+            <div class="bg-white/90 shadow-lg border border-blue-200 backdrop-blur rounded-full px-6 py-3 flex items-center justify-between max-w-xs mx-auto">
+                <div class="flex items-center gap-2 text-blue-600 font-bold">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="text-sm hidden sm:inline">Tiempo:</span>
+                </div>
+                <div id="timerDisplay" class="text-2xl font-mono font-black text-red-600">20:00</div>
+            </div>
+        </div>
+
+        <!-- Encabezado del Examen -->
+        <header class="bg-white rounded-2xl shadow-sm p-8 mb-8 border-t-4 border-blue-600">
+            <h1 class="text-3xl font-extrabold text-slate-800 text-center mb-2">Examen de Investigación Tecnológica</h1>
+            <p class="text-slate-500 text-center">Identifíquese y responda las 20 preguntas. El envío es definitivo.</p>
+        </header>
+
+        <!-- Información del Estudiante -->
+        <section class="bg-white rounded-xl shadow-sm p-6 mb-8 border border-slate-200">
+            <div class="flex flex-col md:flex-row md:items-center gap-4">
+                <div class="flex-1">
+                    <label for="studentName" class="block text-sm font-semibold text-slate-700 mb-1">Nombre Completo del Estudiante:</label>
+                    <input type="text" id="studentName" required
+                           class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                           placeholder="Escriba su nombre aquí...">
+                </div>
+                <div class="md:w-1/3 text-center md:text-right">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Escala</span>
+                    <p class="text-2xl font-bold text-blue-600">100 Puntos</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Formulario de Preguntas -->
+        <form id="quizForm" class="space-y-6">
+            <div id="questionsContainer">
+                <!-- Preguntas cargadas por JS -->
+            </div>
+
+            <!-- Botón de Envío -->
+            <div class="pt-6 pb-12">
+                <button type="submit" id="submitBtn"
+                        class="w-full md:w-auto md:px-12 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg rounded-xl shadow-lg shadow-blue-200 transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center mx-auto">
+                    Finalizar y Enviar Examen
+                </button>
+            </div>
+        </form>
+
+        <!-- Modal de Resultados -->
+        <div id="resultArea" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80">
+            <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full border border-slate-100">
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-2xl font-bold text-slate-800">¡Examen Enviado!</h2>
+                    
+                    <div class="mt-8 p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Estudiante</p>
+                        <p id="resName" class="text-xl font-bold text-slate-800 mb-4"></p>
+                        
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Calificación Final</p>
+                        <p id="resScore" class="text-6xl font-black text-blue-600 my-2">0</p>
+                        <p class="text-sm font-semibold text-blue-400">PUNTOS DE 100</p>
+                    </div>
+
+                    <p id="resFeedback" class="mt-6 text-slate-600 italic font-medium"></p>
+                    
+                    <p class="mt-6 text-sm text-slate-400">Este examen ha sido finalizado. Puede tomar una captura de pantalla de este resultado.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            { q: "La investigación tecnológica se caracteriza principalmente por:", a: ["Buscar únicamente ampliar el conocimiento teórico", "Resolver problemas prácticos mediante la aplicación del conocimiento científico", "Analizar fenómenos históricos", "Realizar estudios filosóficos"], c: 1 },
+            { q: "¿Cuál es un elemento básico para desarrollar un proyecto científico-tecnológico?", a: ["Opiniones personales sin evidencia", "Un problema claramente definido", "Una conclusión anticipada", "Resultados inmediatos"], c: 1 },
+            { q: "En un proyecto tecnológico, la justificación sirve para:", a: ["Explicar por qué el proyecto es necesario e importante", "Presentar los resultados finales", "Describir los materiales únicamente", "Redactar la bibliografía"], c: 0 },
+            { q: "Un modelo de investigación experimental se caracteriza por:", a: ["No manipular variables", "Basarse solo en encuestas", "Manipular una variable para observar sus efectos", "Describir hechos históricos"], c: 2 },
+            { q: "El análisis costo-beneficio permite:", a: ["Determinar únicamente el precio del proyecto", "Comparar los costos invertidos con los beneficios obtenidos", "Reducir el tiempo de investigación", "Eliminar la fase experimental"], c: 1 },
+            { q: "El método científico inicia generalmente con:", a: ["La conclusión", "La hipótesis", "La observación del problema", "La redacción del informe"], c: 2 },
+            { q: "Una hipótesis debe ser:", a: ["Ambigua y general", "Comprobable y clara", "Muy extensa y compleja", "Basada en creencias personales"], c: 1 },
+            { q: "¿Cuál de los siguientes elementos forma parte de un protocolo de investigación?", a: ["Portada, planteamiento del problema, objetivos y metodología", "Solo resultados y conclusiones", "Únicamente referencias bibliográficas", "Opiniones del investigador"], c: 0 },
+            { q: "Un informe científico debe caracterizarse por:", a: ["Uso de lenguaje coloquial", "Opiniones personales sin respaldo", "Claridad, precisión y objetividad", "Uso excesivo de adjetivos"], c: 2 },
+            { q: "¿Cuál es la diferencia principal entre un informe técnico y un artículo científico?", a: ["El informe técnico es más informal", "El artículo científico sigue una estructura formal y se publica en revistas especializadas", "No existe diferencia", "El informe técnico no incluye resultados"], c: 1 },
+            { q: "¿Qué es la investigación tecnológica?", a: ["La búsqueda de nuevos conocimientos científicos teóricos", "El proceso racional y crítico para diseñar herramientas, máquinas y procesos que resuelven problemas prácticos", "El estudio exclusivo de la historia de las computadoras", "La reparación de hardware"], c: 1 },
+            { q: "¿Cuál es el punto de partida fundamental en un proyecto de investigación tecnológica?", a: ["La definición de la conclusión", "La compra de materiales costosos", "La identificación de una necesidad, problema o área de oportunidad", "La elección del equipo"], c: 2 },
+            { q: "¿Qué tipo de investigación tecnológica se centra en la comprensión del funcionamiento interno de los sistemas tecnológicos?", a: ["Investigación experimental", "Investigación aplicada", "Investigación básica", "Investigación de campo"], c: 2 },
+            { q: "¿Qué es la innovación tecnológica incremental?", a: ["Una mejora menor o actualización en un producto o proceso ya existente", "La creación de un producto totalmente nuevo que cambia el mercado", "La eliminación de todos los productos de una empresa", "Un cambio invisible"], c: 0 },
+            { q: "¿Cuál es la etapa del proyecto tecnológico donde se realizan pruebas y ajustes?", a: ["Investigación y análisis", "Desarrollo, ejecución y pruebas", "Diseño y planeación", "Lanzamiento"], c: 1 },
+            { q: "¿Cuál es una característica principal de la investigación tecnológica?", a: ["Su objetivo es principalmente teórico", "Se basa en la curiosidad sin un fin específico", "Es un proceso planeado y consciente que busca transformar el entorno", "Es un proceso accidental"], c: 2 },
+            { q: "¿Qué tipo de investigación tecnológica evalúa el impacto y funcionamiento de un producto ya implementado?", a: ["Investigación prospectiva", "Investigación evaluativa", "Investigación básica", "Investigación histórica"], c: 1 },
+            { q: "En el marco de un proyecto, ¿qué etapa sigue a la \"Identificación de la necesidad\"?", a: ["Implementación", "Evaluación de resultados", "Investigación y análisis de opciones", "Marketing"], c: 2 },
+            { q: "¿Qué define a una innovación tecnológica disruptiva?", a: ["Mejora el rendimiento de productos actuales", "Introduce cambios drásticos que cambian o reemplazan las tecnologías existentes", "Es un proceso lento y sin impacto", "Es una copia de otra tecnología"], c: 1 },
+            { q: "¿Cuál es el objetivo final de la investigación tecnológica aplicada?", a: ["Publicar sobre teorías del futuro", "Solucionar un problema concreto o mejorar la calidad de vida", "Reemplazar a los seres humanos", "Ahorrar papel"], c: 1 }
+        ];
+
+        let timeLeft = 20 * 60; 
+        let timerInterval;
+        let isSubmitted = false;
+
+        function startTimer() {
+            // Verificar si hay tiempo guardado en esta sesión (útil para refrescos accidentales en GitPages)
+            const savedTime = sessionStorage.getItem('exam_time_left');
+            if (savedTime) timeLeft = parseInt(savedTime);
+
+            timerInterval = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    autoSubmit();
+                } else {
+                    timeLeft--;
+                    sessionStorage.setItem('exam_time_left', timeLeft);
+                    updateTimerDisplay();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            const display = document.getElementById('timerDisplay');
+            display.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft < 60) {
+                display.classList.remove('text-red-600');
+                display.classList.add('text-red-500', 'animate-pulse');
+            }
+        }
+
+        function loadQuestions() {
+            const container = document.getElementById('questionsContainer');
+            questions.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'question-card bg-white rounded-xl p-6 border border-slate-200 shadow-sm mb-4';
+                
+                let optionsHtml = '';
+                const letters = ['A', 'B', 'C', 'D'];
+                
+                item.a.forEach((opt, i) => {
+                    optionsHtml += `
+                        <label class="option-label flex items-start gap-3 p-3 rounded-lg border border-transparent hover:border-blue-100">
+                            <input type="radio" name="q${index}" value="${i}" class="mt-1 accent-blue-600">
+                            <span class="text-slate-700 text-sm sm:text-base">
+                                <span class="font-bold text-blue-500">${letters[i]})</span> ${opt}
+                            </span>
+                        </label>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <h3 class="text-lg font-bold text-slate-800 mb-4 flex gap-3">
+                        <span class="flex-shrink-0 inline-flex items-center justify-center bg-blue-600 text-white w-7 h-7 rounded-full text-xs font-bold">${index + 1}</span>
+                        <span>${item.q}</span>
+                    </h3>
+                    <div class="space-y-1">${optionsHtml}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function autoSubmit() {
+            if (isSubmitted) return;
+            const nameField = document.getElementById('studentName');
+            if (!nameField.value.trim()) {
+                nameField.value = "Anónimo (Límite de tiempo)";
+            }
+            // En GitPages alert() es soportado, pero usamos un flujo más limpio
+            processSubmission();
+        }
+
+        function processSubmission() {
+            if (isSubmitted) return;
+            isSubmitted = true;
+            clearInterval(timerInterval);
+            sessionStorage.removeItem('exam_time_left');
+
+            const name = document.getElementById('studentName').value.trim() || "Estudiante";
+            let correctCount = 0;
+
+            questions.forEach((q, i) => {
+                const selected = document.querySelector(`input[name="q${i}"]:checked`);
+                if (selected && parseInt(selected.value) === q.c) {
+                    correctCount++;
+                }
+            });
+
+            const score = Math.round((correctCount / questions.length) * 100);
+
+            document.getElementById('resName').textContent = name;
+            document.getElementById('resScore').textContent = score;
+            
+            let feedback = "";
+            if (score >= 90) feedback = "¡Excelente! Nivel de maestría alcanzado.";
+            else if (score >= 70) feedback = "Buen desempeño, demuestras conocimientos sólidos.";
+            else if (score >= 60) feedback = "Resultado satisfactorio. Recomendamos repasar puntos débiles.";
+            else feedback = "Es necesario reforzar los conceptos fundamentales de esta unidad.";
+            
+            document.getElementById('resFeedback').textContent = feedback;
+            document.getElementById('resultArea').classList.remove('hidden');
+            
+            // Bloqueo total de la interfaz
+            document.body.classList.add('overflow-hidden');
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => input.disabled = true);
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = "Examen Enviado";
+            btn.classList.replace('bg-blue-600', 'bg-slate-400');
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        document.getElementById('quizForm').addEventListener('submit', function(e) {
+            e.preventDefault(); 
+            const name = document.getElementById('studentName').value.trim();
+            if (!name) {
+                alert("Atención: Debe ingresar su nombre completo.");
+                document.getElementById('studentName').focus();
+                return;
+            }
+            if(confirm("¿Está seguro de enviar su examen? Una vez enviado no podrá cambiar sus respuestas.")) {
+                processSubmission();
+            }
+        });
+
+        // Prevenir salida accidental
+        window.onbeforeunload = function() {
+            if (!isSubmitted) return "¿Desea salir? Sus respuestas no se guardarán.";
+        };
+
+        window.onload = () => {
+            loadQuestions();
+            startTimer();
+        };
+    </script>
+</body>
+</html>
